@@ -1,26 +1,48 @@
 const express = require("express");
 const connectDB = require("./config/database");
+const bcrypt = require("bcrypt");
+const saltRounds = 10;
 
 const app = express();
 const User = require("./models/user");
+const { validateSignuData } = require("./utils/validateSignup");
 app.use(express.json());
 
 app.post("/signup", async (req, res) => {
-  console.log("req", req);
-  const user = new User(req.body);
-
-  console.log("user", user);
-
   try {
+    validateSignuData(req.body);
+
+    const { firstName, lastName, email, password } = req.body;
+    const passwordHash = await bcrypt.hash(password, saltRounds);
+    const user = new User({
+      firstName,
+      lastName,
+      email,
+      password: passwordHash,
+    });
     await user.save();
     res.status(201).send(user);
   } catch (err) {
-    console.log("err", err);
-    if (err.code === 11000) {
-      res.status(400).send("Email already exists");
-    } else {
-      res.status(500).send("Something went wrong" + err.message);
+    res.status(400).send("ERROR :" + err.message);
+  }
+});
+
+app.get("/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email: email }).exec();
+    if (!user) {
+      throw new Error("Invalid Credential");
     }
+    const passwordMatch = await bcrypt.compare(password, user.password);
+    console.log("passwordMatch", passwordMatch);
+    if (!passwordMatch) {
+      throw new Error("Invalid Credential");
+    }
+    res.send("Successfully login");
+  } catch (err) {
+    res.status(400).send("ERROR:" + err.message);
   }
 });
 
