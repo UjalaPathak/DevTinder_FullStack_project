@@ -6,13 +6,22 @@ const saltRounds = 10;
 const app = express();
 const User = require("./models/user");
 const { validateSignuData } = require("./utils/validateSignup");
-app.use(express.json());
+const cookieParser = require("cookie-parser");
+const jwt = require("jsonwebtoken");
+const { userAuth } = require("./middlewares/auth.js");
 
+//middlewear
+app.use(express.json());
+app.use(cookieParser());
+
+//signup API
 app.post("/signup", async (req, res) => {
   try {
+    //validate the request
     validateSignuData(req.body);
 
     const { firstName, lastName, email, password } = req.body;
+    //convert password in hash
     const passwordHash = await bcrypt.hash(password, saltRounds);
     const user = new User({
       firstName,
@@ -27,7 +36,8 @@ app.post("/signup", async (req, res) => {
   }
 });
 
-app.get("/login", async (req, res) => {
+//login API
+app.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -36,14 +46,33 @@ app.get("/login", async (req, res) => {
       throw new Error("Invalid Credential");
     }
     const passwordMatch = await bcrypt.compare(password, user.password);
-    console.log("passwordMatch", passwordMatch);
+
     if (!passwordMatch) {
       throw new Error("Invalid Credential");
     }
+    //create token
+    const token = jwt.sign({ _id: user._id }, "DEV@TINDER345");
+
+    res.cookie("token", token);
     res.send("Successfully login");
   } catch (err) {
     res.status(400).send("ERROR:" + err.message);
   }
+});
+
+//singe Profile check
+app.get("/profile", userAuth, async (req, res) => {
+  try {
+    const user = req.user;
+    res.send(user);
+  } catch (err) {
+    res.status(400).send("Error:" + err.message);
+  }
+});
+
+app.post("/sendConnectionRequest", userAuth, async (req, res) => {
+  const { user } = req.user;
+  res.send(user.firstName + "send connection Request");
 });
 
 app.get("/user", async (req, res) => {
