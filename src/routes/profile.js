@@ -1,5 +1,10 @@
 const express = require("express");
 const { userAuth } = require("../middlewares/auth");
+const bcrypt = require("bcrypt");
+const {
+  validateProfileData,
+  ValidatePassword,
+} = require("../utils/validateProfileData");
 const profileRouter = express.Router();
 //singe Profile check
 profileRouter
@@ -11,33 +16,46 @@ profileRouter
       res.status(400).send("Error:" + err.message);
     }
   })
-  .patch("/profile", async (req, res) => {
-    const userId = req.body._id;
-    const data = req.body;
-    console.log("data", data);
+  .patch("/profile/edit", userAuth, async (req, res) => {
     try {
-      const updateValue = [
-        "_id",
-        "photoUrl",
-        "description",
-        "skills",
-        "gender",
-      ];
-
-      const allowedUpdateValue = Object.keys(data).every((k) => {
-        return updateValue.includes(k);
-      });
-
-      console.log("allowedUpdateValue", allowedUpdateValue);
-      if (!allowedUpdateValue) {
-        throw new Error("User Can not be updated");
+      if (!validateProfileData(req)) {
+        throw new Error("Invalid Edit request");
       }
-      const value = await User.findByIdAndUpdate({ _id: userId }, data, {
-        runValidators: true,
+      const loggedInuser = req.user;
+
+      Object.keys(req.body).forEach((key) => {
+        loggedInuser[key] = req.body[key];
       });
-      res.send(value);
-    } catch (err) {}
-    res.status(400).send("User not updated successfully");
+
+      await loggedInuser.save();
+      res.send({
+        message: `${loggedInuser.firstName}, Updated Successfully`,
+        resources: loggedInuser,
+      });
+    } catch (err) {
+      res.status(400).send("Error: " + err.message);
+    }
+  })
+  .patch("/profile/password", userAuth, async (req, res) => {
+    try {
+      console.log("req", req);
+      if (!ValidatePassword) {
+        throw new Error("Password is not strong");
+      }
+      const { password } = req.body;
+
+      const user = req.user;
+      const passwordHash = await bcrypt.hash(password, 10);
+      user.password = passwordHash;
+
+      await user.save();
+      res.send({
+        message: `${user.firstName}, Updated Successfully`,
+        resources: user,
+      });
+    } catch (err) {
+      res.status(400).send("Error:" + err.message);
+    }
   })
   .delete("/profile", async (req, res) => {
     const id = req.body._id;

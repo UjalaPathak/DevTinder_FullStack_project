@@ -51,6 +51,10 @@ appSchema
     } catch (err) {
       res.status(400).send("ERROR :" + err.message);
     }
+  })
+  .post("/logout", async (req, res) => {
+    res.cookie("token", null, { expiresIn: new Date(Date.now()) });
+    res.send("Logout Successfully");
   });
 
 module.exports = { appSchema };
