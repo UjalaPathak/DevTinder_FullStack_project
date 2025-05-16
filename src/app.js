@@ -9,6 +9,7 @@ const { userAuth } = require("./middlewares/auth.js");
 const { appSchema } = require("./routes/auth.js");
 const { profileRouter } = require("./routes/profile.js");
 const requestRouter = require("./routes/request.js");
+const { userRouter } = require("./routes/user.js");
 
 //middlewear
 app.use(express.json());
@@ -16,6 +17,7 @@ app.use(cookieParser());
 app.use("/", appSchema);
 app.use("/", profileRouter);
 app.use("/", requestRouter);
+app.use("/", userRouter);
 
 app.get("/feed", async (req, res) => {
   const userId = req.query._id;
