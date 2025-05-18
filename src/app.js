@@ -19,35 +19,35 @@ app.use("/", profileRouter);
 app.use("/", requestRouter);
 app.use("/", userRouter);
 
-app.get("/feed", async (req, res) => {
-  const userId = req.query._id;
-  console.log("ID from query:", userId);
+// app.get("/feed", async (req, res) => {
+//   const userId = req.query._id;
+//   console.log("ID from query:", userId);
 
-  try {
-    // find all the document
-    const users = await User.findById(userId).exec();
-    console.log("User result:", users);
-    if (!users) {
-      return res.status(404).send("user not found");
-    }
-    res.send(users);
-  } catch (err) {
-    res.status(400).send("user not found");
-  }
-});
+//   try {
+//     // find all the document
+//     const users = await User.findById(userId).exec();
+//     console.log("User result:", users);
+//     if (!users) {
+//       return res.status(404).send("user not found");
+//     }
+//     res.send(users);
+//   } catch (err) {
+//     res.status(400).send("user not found");
+//   }
+//});
 
-app.post("/query-user", async (req, res) => {
-  const id = req.body._id;
+// app.post("/query-user", async (req, res) => {
+//   const id = req.body._id;
 
-  try {
-    const value = await User.findByIdAndUpdate(id, {
-      firstName: "aaliya",
-    }).exec();
-    res.send(value);
-  } catch (err) {
-    res.status(400).send("user not dound");
-  }
-});
+//   try {
+//     const value = await User.findByIdAndUpdate(id, {
+//       firstName: "aaliya",
+//     }).exec();
+//     res.send(value);
+//   } catch (err) {
+//     res.status(400).send("user not dound");
+//   }
+// });
 
 connectDB()
   .then(() => {
